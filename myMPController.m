@@ -27,11 +27,13 @@ T = T * timeWarp;
 state = floor(mod(T,4)) + 1;
 xCurrTarget = xTarget(:,state);
 
+currBb = bb(:,state);
+
 f = ((x - xCurrTarget)' * G')';
 
 A = -F;
 
-b = -bb -J*x - L*xCurrTarget;
+b = -currBb -J*x - L*xCurrTarget;
 
 [U,status,iA1] = mpcqpsolver(H,f,A,b,[],zeros(0,1),iA,opt);
 %% your remaining code here

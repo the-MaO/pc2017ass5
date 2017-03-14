@@ -35,6 +35,26 @@ x0=[xHigh 0 yHigh 0 0 0 0 0]'; % starting offset
 xZero = xHigh;
 yZero = yHigh;
 
+% define constraints for each side
+margin = 0.1;
+scl1 = [xHigh - margin; yLow];
+scl2 = [xLow; yHigh - margin];
+scl3 = [xLow - margin; yLow];
+scl4 = [xLow; yLow - margin];
+
+sch1 = [xHigh + margin; yHigh];
+sch2 = [xHigh; yHigh + margin];
+sch3 = [xLow + margin; yHigh];
+sch4 = [xHigh; yLow + margin];
+% scl1 = [0; 0];
+% scl2 = [0; 0];
+% scl3 = [0; 0];
+% scl4 = [0; 0];
+% 
+% sch1 = [1; 1];
+% sch2 = [1; 1];
+% sch3 = [1; 1];
+% sch4 = [1; 1];
 %% Declare penalty matrices and tune them here:
 Q=eye(8); % increasing improves linear performance, non-linear moves in Y but barely in X
               % making it smaller => shit don't move at all
@@ -58,22 +78,38 @@ P(3,3) = 500;
 %% Declare contraints
 % Declaring constraints only on states (X,Y,theta,psi) and inputs u
 angleConstraint=2*pi/180; % in radians
-cl=[0.02; 0.02; -angleConstraint; -angleConstraint];
-ch=[0.45; 0.55;  angleConstraint;  angleConstraint];
+cl1=[scl1(1); scl1(2); -angleConstraint; -angleConstraint];
+cl2=[scl2(1); scl2(2); -angleConstraint; -angleConstraint];
+cl3=[scl3(1); scl3(2); -angleConstraint; -angleConstraint];
+cl4=[scl4(1); scl4(2); -angleConstraint; -angleConstraint];
+
+ch1=[sch1(1); sch1(2);  angleConstraint;  angleConstraint];
+ch2=[sch2(1); sch2(2);  angleConstraint;  angleConstraint];
+ch3=[sch3(1); sch3(2);  angleConstraint;  angleConstraint];
+ch4=[sch4(1); sch4(2);  angleConstraint;  angleConstraint];
+
 ul=[-1; -1];
 uh=[1; 1];
 % constrained vector is Dx, hence
 D=zeros(4,8);D(1,1)=1;D(2,3)=1;D(3,5)=1;D(4,7)=1;
 
 %% Compute stage constraint matrices and vector
-[Dt,Et,bt]=myStageConstraints(A,B,D,cl,ch,ul,uh);
+[Dt1,Et1,bt1]=myStageConstraints(A,B,D,cl1,ch1,ul,uh);
+[Dt2,Et2,bt2]=myStageConstraints(A,B,D,cl2,ch2,ul,uh);
+[Dt3,Et3,bt3]=myStageConstraints(A,B,D,cl3,ch3,ul,uh);
+[Dt4,Et4,bt4]=myStageConstraints(A,B,D,cl4,ch4,ul,uh);
+
 
 %% Compute trajectory constraints matrices and vector
-[DD,EE,bb]=myTrajectoryConstraints(Dt,Et,bt,N);
+[DD1,EE1,bb1]=myTrajectoryConstraints(Dt1,Et1,bt1,N);
+[DD2,EE2,bb2]=myTrajectoryConstraints(Dt2,Et2,bt2,N);
+[DD3,EE3,bb3]=myTrajectoryConstraints(Dt3,Et3,bt3,N);
+[DD4,EE4,bb4]=myTrajectoryConstraints(Dt4,Et4,bt4,N);
 
 %% Compute QP constraint matrices
 [Gamma,Phi] = genPrediction(A,B,N); % get prediction matrices:
-[F,J,L]=myConstraintMatrices(DD,EE,Gamma,Phi,N);
+
+[F,J,L]=myConstraintMatrices(DD1,EE1,Gamma,Phi,N);
 
 
 %% Compute QP cost matrices
@@ -83,6 +119,9 @@ D=zeros(4,8);D(1,1)=1;D(2,3)=1;D(3,5)=1;D(4,7)=1;
 % Calculating the inverse of the lower triangular H. see doc mpcqpsolver.
 [H,p] = chol(H,'lower');
 H=(H'\eye(size(H)))';
+
+%% create arrays of combined constraint matrices for 4 corners
+bb = [bb1, bb2, bb3, bb4];
 
 %% Running a matlab simulation and visualisng the results:
 MatlabSimulation

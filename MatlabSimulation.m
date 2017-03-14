@@ -10,12 +10,12 @@ allU=[];
 allOpt=[];
 allIter=[];
 % initial vector for 'cold start'. see mpcqpsolver
-iA = false(size(bb));
+iA = false(size(bb1));
 for t=0:Ts:T
     waitbar(t/T,hw,'Please wait...');
     tic;
     [u,status,iA] = myMPController(H,G,F,bb,J,L,x(:,end),xTarget,size(B,2),iA, t);
-    optTime=toc;    
+    optTime=toc; 
     if status<0
         close(hw);
         warning('QP solver failed to find a solution!');
@@ -32,7 +32,7 @@ end
 t=0:Ts:t;
 x=x(:,1:length(t))';
 % close(hw);
-figure('Name','Optimisation time'); 
-plot(t,allOpt);
-xlabel('Simulation time [s]')
-ylabel('Optimisation time [s]')
+% figure('Name','Optimisation time'); 
+% plot(t,allOpt);
+% xlabel('Simulation time [s]')
+% ylabel('Optimisation time [s]')
