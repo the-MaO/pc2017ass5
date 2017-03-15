@@ -18,10 +18,12 @@ T=20;
 stickCorr = 0;
 
 % define sides of the square
-xHigh = 0.4 + stickCorr;
-xLow = 0.2 - stickCorr;
+xLow = 0.2;
+xMed = 0.35;
+xHigh = 0.5;
+yLow = 0.2;
+yMed = 0.35;
 yHigh = 0.5;
-yLow = 0.3;
 
 % define target states
 xTarget1=[xHigh 0 yHigh 0 0 0 0 0]';
@@ -30,36 +32,39 @@ xTarget3=[xLow 0 yLow 0 0 0 0 0]';
 xTarget4=[xHigh 0 yLow 0 0 0 0 0]';
 xTarget = [xTarget1, xTarget2, xTarget3, xTarget4];
 
-x0=[xHigh 0 yHigh 0 0 0 0 0]'; % starting offset
+x0=xTarget1; % starting offset
 
-xZero = xHigh;
-yZero = yHigh;
+xZero = xTarget1(1);
+yZero = xTarget1(3);
 
 %% Declare penalty matrices and tune them here:
 Q=eye(8); % increasing improves linear performance, non-linear moves in Y but barely in X
               % making it smaller => shit don't move at all
-Q(1,1) = 200;       % increase this hard to make X move
+Q(1,1) = 180;       % increase this hard to make X move
 % Q(2,2) = 1;
-Q(3,3) = 200;
+Q(3,3) = 180;
 % Q(4,4) = 1;
 Q(5,5) = 200;
-% Q(6,6) = 10;
+Q(6,6) = 50;
 Q(7,7) = 200;
-% Q(8,8) = 10;
+Q(8,8) = 50;
 
 R=eye(2); % increase and shit don't move
               % decrease non-linear doesn't move
 P=eye(8);     % increase and it barely moves
             % decrease and it's even worse
-P(1,1) = 500;       % increase this hard to make X move
+P(1,1) = 800;       % increase this hard to make X move
 
-P(3,3) = 500;
+P(3,3) = 800;
 
 %% Declare contraints
 % Declaring constraints only on states (X,Y,theta,psi) and inputs u
 angleConstraint=1.5*pi/180; % in radians
 cl=[xLow; yLow; -angleConstraint; -angleConstraint];
 ch=[xHigh; yHigh;  angleConstraint;  angleConstraint];
+% cl=[0; 0; -angleConstraint; -angleConstraint];
+% ch=[1; 1;  angleConstraint;  angleConstraint];
+
 ul=[-1; -1];
 uh=[1; 1];
 % constrained vector is Dx, hence
@@ -123,3 +128,4 @@ scatter(xLow,yLow, 'r');
 scatter(xLow,yHigh, 'r');
 scatter(xHigh,yHigh, 'r');
 scatter(xHigh,yLow, 'r');
+

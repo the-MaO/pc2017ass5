@@ -15,7 +15,6 @@ iA = false(size(bb));
 for t=0:Ts:T
     waitbar(t/T,hw,'Please wait...');
     tic;
-    display(['passing to ctrl ' num2str(timeInstant)])
     [u,status,iA, timeInstant] = myMPController(H,G,F,bb,J,L,x(:,end),xTarget,size(B,2),iA, timeInstant);
     optTime=toc; 
     if status<0

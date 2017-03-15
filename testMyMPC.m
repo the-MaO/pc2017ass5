@@ -10,12 +10,12 @@ Ts=1/20; % inc. improves non-linear performance, also increases computation time
 [A,B,C,~] = genCraneODE(m,M,MR,r,g,Tx,Ty,Vm,Ts);
 
 %% Define other parameters
-N=ceil(1/Ts); % ceiling to ensure N is an integer
+N=25; % ceiling to ensure N is an integer
     % inc improves slightly, inc comp time
 T=20;
 
 % constant to correct for "stickiness" of the crane in X axis
-stickCorr = 0.01;
+stickCorr = 0;
 
 % define sides of the square
 xHigh = 0.4 + stickCorr;
@@ -58,14 +58,14 @@ sch4 = [xHigh; yLow + margin];
 %% Declare penalty matrices and tune them here:
 Q=eye(8); % increasing improves linear performance, non-linear moves in Y but barely in X
               % making it smaller => shit don't move at all
-Q(1,1) = 200;       % increase this hard to make X move
+Q(1,1) = 80;       % increase this hard to make X move
 % Q(2,2) = 1;
-Q(3,3) = 200;
+Q(3,3) = 80;
 % Q(4,4) = 1;
 Q(5,5) = 200;
-% Q(6,6) = 10;
+Q(6,6) = 50;
 Q(7,7) = 200;
-% Q(8,8) = 10;
+Q(8,8) = 50;
 
 R=eye(2); % increase and shit don't move
               % decrease non-linear doesn't move
@@ -77,7 +77,7 @@ P(3,3) = 500;
 
 %% Declare contraints
 % Declaring constraints only on states (X,Y,theta,psi) and inputs u
-angleConstraint=2*pi/180; % in radians
+angleConstraint=1*pi/180; % in radians
 cl1=[scl1(1); scl1(2); -angleConstraint; -angleConstraint];
 cl2=[scl2(1); scl2(2); -angleConstraint; -angleConstraint];
 cl3=[scl3(1); scl3(2); -angleConstraint; -angleConstraint];
