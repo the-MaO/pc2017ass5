@@ -28,13 +28,12 @@ else
     timeInstant = 0;
 end
 
-timeWarp = (xTarget(1,1) - xTarget(1,2)) * 1/30;
+timeWarp = (xTarget(1,1) - xTarget(1,2)) * 2/30;
 T = timeInstant * timeWarp;
 state = floor(mod(T,4)) + 1;
 xCurrTarget = xTarget(:,state);
 
-currBb = bb;
-%(:,state);
+currBb = bb(:,state);
 
 f = ((x - xCurrTarget)' * G')';
 

@@ -11,7 +11,7 @@ allOpt=[];
 allIter=[];
 timeInstant = 0;
 % initial vector for 'cold start'. see mpcqpsolver
-iA = false(size(bb));
+iA = false(size(bb1));
 for t=0:Ts:T
     waitbar(t/T,hw,'Please wait...');
     tic;
