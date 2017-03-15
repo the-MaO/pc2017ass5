@@ -5,7 +5,7 @@ clc
 load('Params_Simscape.mat');
 load('SSmodelParams.mat');
 %% Load the dynamics matrices using a solution from last assignment
-Ts=1/30; % inc. improves non-linear performance, also increases computation time
+Ts=1/20; % inc. improves non-linear performance, also increases computation time
 % dec just shit
 [A,B,C,~] = genCraneODE(m,M,MR,r,g,Tx,Ty,Vm,Ts);
 
@@ -135,6 +135,17 @@ bb = [bb1, bb2, bb3, bb4];
 MatlabSimulation
 GantryResponsePlot(t,allU,...
     x,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],[1 3],xTarget,'Linear simulation: MPC performance');
+
+%% plot trace of the load to check square tracking
+stringLength = 1;
+figure;
+scatter(x(:,1)+stringLength*sin(x(:,5)),x(:,3)+stringLength*sin(x(:,7)))
+hold on
+scatter(x(:,1),x(:,3),'g');
+scatter(xLow,yLow, 'r');
+scatter(xLow,yHigh, 'r');
+scatter(xHigh,yHigh, 'r');
+scatter(xHigh,yLow, 'r');
 %% Run the Simulink simulation for your controller
 % Note that in order to test your controller you have to navigate to
 % SimscapeCrane_MPChard/MPC and copy paste your controller code inside the

@@ -9,12 +9,14 @@ x=x0;
 allU=[];
 allOpt=[];
 allIter=[];
+timeInstant = 0;
 % initial vector for 'cold start'. see mpcqpsolver
 iA = false(size(bb));
 for t=0:Ts:T
     waitbar(t/T,hw,'Please wait...');
     tic;
-    [u,status,iA] = myMPController(H,G,F,bb,J,L,x(:,end),xTarget,size(B,2),iA, t);
+    display(['passing to ctrl ' num2str(timeInstant)])
+    [u,status,iA, timeInstant] = myMPController(H,G,F,bb,J,L,x(:,end),xTarget,size(B,2),iA, timeInstant);
     optTime=toc; 
     if status<0
         close(hw);
