@@ -10,30 +10,56 @@ Ts=1/30; % inc. improves non-linear performance, also increases computation time
 [A,B,C,~] = genCraneODE(m,M,MR,r,g,Tx,Ty,Vm,Ts);
 
 %% Define other parameters
-N=ceil(2/Ts); % ceiling to ensure N is an integer
+N=ceil(1/Ts); % ceiling to ensure N is an integer
     % inc improves slightly, inc comp time
-T=15;
-xTarget=[0.4 0 0.5 0 0 0 0 0]';% target equilibrium state
-x0=[xRange(2)/2 0 yRange(2)/2 0 0 0 0 0]'; % starting offset
+T=20;
+
+% constant to correct for "stickiness" of the crane in X axis
+stickCorr = 0;
+
+% define sides of the square
+xHigh = 0.4 + stickCorr;
+xLow = 0.2 - stickCorr;
+yHigh = 0.5;
+yLow = 0.3;
+
+% define target states
+xTarget1=[xHigh 0 yHigh 0 0 0 0 0]';
+xTarget2=[xLow 0 yHigh 0 0 0 0 0]';
+xTarget3=[xLow 0 yLow 0 0 0 0 0]';
+xTarget4=[xHigh 0 yLow 0 0 0 0 0]';
+xTarget = [xTarget1, xTarget2, xTarget3, xTarget4];
+
+x0=[xHigh 0 yHigh 0 0 0 0 0]'; % starting offset
+
+xZero = xHigh;
+yZero = yHigh;
 
 %% Declare penalty matrices and tune them here:
 Q=eye(8); % increasing improves linear performance, non-linear moves in Y but barely in X
               % making it smaller => shit don't move at all
-Q(1,1) = 40;       % increase this hard to make X move
-Q(3,3) = 40;
-Q(5,5) = 80;
-Q(7,7) = 80;
-              
+Q(1,1) = 200;       % increase this hard to make X move
+% Q(2,2) = 1;
+Q(3,3) = 200;
+% Q(4,4) = 1;
+Q(5,5) = 200;
+% Q(6,6) = 10;
+Q(7,7) = 200;
+% Q(8,8) = 10;
+
 R=eye(2); % increase and shit don't move
               % decrease non-linear doesn't move
 P=eye(8);     % increase and it barely moves
             % decrease and it's even worse
+P(1,1) = 500;       % increase this hard to make X move
+
+P(3,3) = 500;
 
 %% Declare contraints
 % Declaring constraints only on states (X,Y,theta,psi) and inputs u
-angleConstraint=20*pi/180; % in radians
-cl=[0.02; 0.02; -angleConstraint; -angleConstraint];
-ch=[0.45; 0.55;  angleConstraint;  angleConstraint];
+angleConstraint=1.5*pi/180; % in radians
+cl=[xLow; yLow; -angleConstraint; -angleConstraint];
+ch=[xHigh; yHigh;  angleConstraint;  angleConstraint];
 ul=[-1; -1];
 uh=[1; 1];
 % constrained vector is Dx, hence
@@ -75,3 +101,11 @@ responseRHC.input=GantryCraneInput;
 GantryResponsePlot(responseRHC.output.time,responseRHC.input.signals.values,...
     responseRHC.output.signals.values,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],...
     [1 3],xTarget,'Nonlinear simulation: MPC performance');
+%% plot trace of the load to check square tracking
+figure;
+scatter(responseRHC.output.signals.values(:,1),responseRHC.output.signals.values(:,3))
+hold on
+scatter(xLow,yLow, 'r');
+scatter(xLow,yHigh, 'r');
+scatter(xHigh,yHigh, 'r');
+scatter(xHigh,yLow, 'r');

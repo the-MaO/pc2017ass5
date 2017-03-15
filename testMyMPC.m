@@ -36,7 +36,7 @@ xZero = xHigh;
 yZero = yHigh;
 
 % define constraints for each side
-margin = 0.1;
+margin = 0.01;
 scl1 = [xHigh - margin; yLow];
 scl2 = [xLow; yHigh - margin];
 scl3 = [xLow - margin; yLow];
@@ -88,28 +88,36 @@ ch2=[sch2(1); sch2(2);  angleConstraint;  angleConstraint];
 ch3=[sch3(1); sch3(2);  angleConstraint;  angleConstraint];
 ch4=[sch4(1); sch4(2);  angleConstraint;  angleConstraint];
 
+% cl=[0.02; 0.02; -angleConstraint; -angleConstraint];
+% ch=[0.45; 0.55;  angleConstraint;  angleConstraint];
+
+
 ul=[-1; -1];
 uh=[1; 1];
 % constrained vector is Dx, hence
 D=zeros(4,8);D(1,1)=1;D(2,3)=1;D(3,5)=1;D(4,7)=1;
 
 %% Compute stage constraint matrices and vector
-[Dt1,Et1,bt1]=myStageConstraints(A,B,D,cl1,ch1,ul,uh);
-[Dt2,Et2,bt2]=myStageConstraints(A,B,D,cl2,ch2,ul,uh);
-[Dt3,Et3,bt3]=myStageConstraints(A,B,D,cl3,ch3,ul,uh);
-[Dt4,Et4,bt4]=myStageConstraints(A,B,D,cl4,ch4,ul,uh);
+[Dt,Et,bt1]=myStageConstraints(A,B,D,cl1,ch1,ul,uh);
+[Dt,Et,bt2]=myStageConstraints(A,B,D,cl2,ch2,ul,uh);
+[Dt,Et,bt3]=myStageConstraints(A,B,D,cl3,ch3,ul,uh);
+[Dt,Et,bt4]=myStageConstraints(A,B,D,cl4,ch4,ul,uh);
+
+% [Dt,Et,bt]=myStageConstraints(A,B,D,cl,ch,ul,uh);
 
 
 %% Compute trajectory constraints matrices and vector
-[DD1,EE1,bb1]=myTrajectoryConstraints(Dt1,Et1,bt1,N);
-[DD2,EE2,bb2]=myTrajectoryConstraints(Dt2,Et2,bt2,N);
-[DD3,EE3,bb3]=myTrajectoryConstraints(Dt3,Et3,bt3,N);
-[DD4,EE4,bb4]=myTrajectoryConstraints(Dt4,Et4,bt4,N);
+[DD,EE,bb1]=myTrajectoryConstraints(Dt,Et,bt1,N);
+[DD,EE,bb2]=myTrajectoryConstraints(Dt,Et,bt2,N);
+[DD,EE,bb3]=myTrajectoryConstraints(Dt,Et,bt3,N);
+[DD,EE,bb4]=myTrajectoryConstraints(Dt,Et,bt4,N);
+
+% [DD,EE,bb]=myTrajectoryConstraints(Dt,Et,bt,N);
 
 %% Compute QP constraint matrices
 [Gamma,Phi] = genPrediction(A,B,N); % get prediction matrices:
 
-[F,J,L]=myConstraintMatrices(DD1,EE1,Gamma,Phi,N);
+[F,J,L]=myConstraintMatrices(DD,EE,Gamma,Phi,N);
 
 
 %% Compute QP cost matrices
@@ -123,7 +131,7 @@ H=(H'\eye(size(H)))';
 %% create arrays of combined constraint matrices for 4 corners
 bb = [bb1, bb2, bb3, bb4];
 
-%% Running a matlab simulation and visualisng the results:
+%% Running a matlab simulation and visualising the results:
 MatlabSimulation
 GantryResponsePlot(t,allU,...
     x,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],[1 3],xTarget,'Linear simulation: MPC performance');

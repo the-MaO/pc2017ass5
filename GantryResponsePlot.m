@@ -20,6 +20,7 @@ for ii=1:8
     plot(t,output(:,ii));
     h=gca;
     if any(constId==ii) % There are constraints for this state
+        ch(find(constId==ii))
         line([t(1) t(end)],[ch(find(constId==ii)) ch(find(constId==ii))],'Color',[0.5 0.1 0.1]);
         line([t(1) t(end)],[cl(find(constId==ii)) cl(find(constId==ii))],'Color',[0.5 0.1 0.1]);
     end    

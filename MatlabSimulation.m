@@ -10,7 +10,7 @@ allU=[];
 allOpt=[];
 allIter=[];
 % initial vector for 'cold start'. see mpcqpsolver
-iA = false(size(bb1));
+iA = false(size(bb));
 for t=0:Ts:T
     waitbar(t/T,hw,'Please wait...');
     tic;
@@ -31,8 +31,8 @@ for t=0:Ts:T
 end
 t=0:Ts:t;
 x=x(:,1:length(t))';
-% close(hw);
-% figure('Name','Optimisation time'); 
-% plot(t,allOpt);
-% xlabel('Simulation time [s]')
-% ylabel('Optimisation time [s]')
+close(hw);
+figure('Name','Optimisation time'); 
+plot(t,allOpt);
+xlabel('Simulation time [s]')
+ylabel('Optimisation time [s]')

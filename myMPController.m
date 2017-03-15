@@ -27,7 +27,8 @@ T = T * timeWarp;
 state = floor(mod(T,4)) + 1;
 xCurrTarget = xTarget(:,state);
 
-currBb = bb(:,state);
+currBb = bb
+% (:,state);
 
 f = ((x - xCurrTarget)' * G')';
 
