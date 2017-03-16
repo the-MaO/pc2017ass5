@@ -1,11 +1,11 @@
 clear variables
-% close all
+close all
 clc
 %% SimscapeCrane_MPC_start;
 load('Params_Simscape.mat');
 load('SSmodelParams.mat');
 %% Load the dynamics matrices using a solution from last assignment
-Ts=1/30;    % sampling time
+Ts=1/40;    % sampling time
 [A,B,C,~] = genCraneODE(m,M,MR,r,g,Tx,Ty,Vm,Ts);
 
 %% Define other parameters
@@ -33,7 +33,7 @@ xZero = xHigh;
 yZero = yHigh;
 
 % define constraints for each side
-margin = 0.003;
+margin = 0.001;
 scl1 = [xHigh - margin; yLow];
 scl2 = [xLow; yHigh - margin];
 scl3 = [xLow - margin; yLow];
@@ -150,10 +150,56 @@ craneMovementPlot(responseRHC.output.signals.values(:,1),...
 % lenght is estimated, the calculation is not not numerically accurate,
 % however, in comparison between squares it is informative.
 
+% get the traces of the pendulum
 x_pend = responseRHC.output.signals.values(:,1) + stringLength* sin(responseRHC.output.signals.values(:,5));
 y_pend = responseRHC.output.signals.values(:,3) + stringLength* sin(responseRHC.output.signals.values(:,7));
 
+% get the coordinates of the largest circumscribed square
 x_min = min(x_pend);
 x_max = max(x_pend);
 y_min = min(y_pend);
 y_max = max(y_pend);
+hline(y_min,'c');
+hline(y_max,'c');
+vline(x_min,'c');
+vline(x_max,'c');
+
+% get coordinates of largest inscribed square
+% find x-coordinates of trace left and right side
+side_log1 = y_pend > 1.15*yLow;
+side_log2 = y_pend < 0.95*yHigh;
+x_side = x_pend(side_log1 & side_log2);
+% separate to left and right side
+side_log1 = x_side < 0.3;
+side_log2 = x_side > 0.3;
+x_left = x_side(side_log1);
+x_right = x_side(side_log2);
+% get x-coordinates of inscribed square
+x_ins_min = max(x_left);
+x_ins_max = min(x_right);
+
+vline(x_ins_max,'c');
+vline(x_ins_min,'c');
+
+% find y-coordinates of trace top and bottom side
+side_log1 = x_pend > 1.15*xLow;
+side_log2 = x_pend < 0.95*xHigh;
+y_side = y_pend(side_log1 & side_log2);
+% separate to left and right side
+side_log1 = y_side < 0.3;
+side_log2 = y_side > 0.3;
+y_bot = y_side(side_log1);
+y_top = y_side(side_log2);
+% get y-coordinates of inscribed square
+y_ins_min = max(y_bot);
+y_ins_max = min(y_top);
+
+hline(y_ins_max,'c');
+hline(y_ins_min,'c');
+
+% calculate space the trace needs
+% the smaller this number, the better square is tracked
+a_cir = (x_max - x_min)*(y_max - y_min);
+a_ins = (x_ins_max - x_ins_min) * (y_ins_max - y_ins_min);
+
+squarness = a_cir - a_ins
