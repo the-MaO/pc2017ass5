@@ -10,9 +10,9 @@ function craneMovementPlot(x ,y, x_ang, y_ang, xLow, xHigh, yLow, yHigh, con, st
 % red dotted line - constraint
 
 figure;
-plot(x+stringLength*sin(x_ang),y+stringLength*sin(y_ang), '.b'); % pendulum
+scatter(x+stringLength*sin(x_ang),y+stringLength*sin(y_ang), '.b'); % pendulum
 hold on
-plot(x,y,'.g'); % crane
+scatter(x,y,'.g'); % crane
 
 % corners of the square
 scatter(xLow,yLow, 'r');
