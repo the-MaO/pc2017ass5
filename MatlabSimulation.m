@@ -9,13 +9,19 @@ x=x0;
 allU=[];
 allOpt=[];
 allIter=[];
-timeInstant = 0;
 % initial vector for 'cold start'. see mpcqpsolver
-iA = false(size(bb1));
+iA = false(size(bb));
 for t=0:Ts:T
     waitbar(t/T,hw,'Please wait...');
+    % calculate the next state
+    timeWarp = (xTarget1(1) - xTarget2(1));
+    time = t / timeWarp * 0.1;
+    state = floor(mod(time,4)) + 1;
+    xCurrTarget = xTarget_all{state};
+    currBb = bb_all(:,state);
+    % calculate controller
     tic;
-    [u,status,iA, timeInstant] = myMPController(H,G,F,bb,J,L,x(:,end),xTarget,size(B,2),iA, timeInstant);
+    [u,status,iA] = myMPController(H,G,F,currBb,J,L,x(:,end),xCurrTarget,size(B,2),iA);
     optTime=toc; 
     if status<0
         close(hw);

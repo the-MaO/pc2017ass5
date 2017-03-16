@@ -11,7 +11,7 @@ function GantryResponsePlot(t,input,output,ul,uh,cl,ch,constId,xTarget,figureTit
 % Light Grey - Target
 allTitles=[{'X'},{'dX/dt'},{'Y'},{'dY/dt'},{'\theta'},{'d\theta/dt'},{'\psi'},{'d\psi/dt'}];
 subplotid=[1 3 5 7 2 4 6 8];
-info=lsiminfo(output,t,xTarget(:,1));
+info=lsiminfo(output,t,xTarget);
 settlingTime=extractfield(info, 'SettlingTime');
 
 figure('Name',figureTitle);
@@ -20,14 +20,10 @@ for ii=1:8
     plot(t,output(:,ii));
     h=gca;
     if any(constId==ii) % There are constraints for this state
-        ch(find(constId==ii))
         line([t(1) t(end)],[ch(find(constId==ii)) ch(find(constId==ii))],'Color',[0.5 0.1 0.1]);
         line([t(1) t(end)],[cl(find(constId==ii)) cl(find(constId==ii))],'Color',[0.5 0.1 0.1]);
     end    
-    line([t(1) t(end)],[xTarget(ii,1) xTarget(ii,1)],'Color',[0.6 0.6 0.6],'LineStyle','--'); % target state
-    if (ii == 1 || ii == 3)
-           line([t(1) t(end)],[xTarget(ii,3) xTarget(ii,3)],'Color',[0.6 0.6 0.6],'LineStyle','--'); % target state 
-    end
+    line([t(1) t(end)],[xTarget(ii) xTarget(ii)],'Color',[0.6 0.6 0.6],'LineStyle','--'); % target state
     line([settlingTime(ii) settlingTime(ii)],h.YLim,'Color',[0.3 0.3 0.3]);%settling time
     title(cell2mat(allTitles(ii)));
 end

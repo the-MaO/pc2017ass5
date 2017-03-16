@@ -5,30 +5,27 @@ clc
 load('Params_Simscape.mat');
 load('SSmodelParams.mat');
 %% Load the dynamics matrices using a solution from last assignment
-Ts=1/20; % inc. improves non-linear performance, also increases computation time
-% dec just shit
+Ts=1/20;    % sampling time
 [A,B,C,~] = genCraneODE(m,M,MR,r,g,Tx,Ty,Vm,Ts);
 
 %% Define other parameters
-N=25; % ceiling to ensure N is an integer
-    % inc improves slightly, inc comp time
-T=20;
+N=25;       % horizon length
+T=20;       % simulation time
 
 % constant to correct for "stickiness" of the crane in X axis
-stickCorr = 0;
+stickCorr = 0.01;
 
 % define sides of the square
-xHigh = 0.4 + stickCorr;
-xLow = 0.2 - stickCorr;
-yHigh = 0.5;
-yLow = 0.3;
+xHigh = 0.45 + stickCorr;
+xLow = 0.1 - stickCorr;
+yHigh = 0.45;
+yLow = 0.1;
 
 % define target states
 xTarget1=[xHigh 0 yHigh 0 0 0 0 0]';
 xTarget2=[xLow 0 yHigh 0 0 0 0 0]';
 xTarget3=[xLow 0 yLow 0 0 0 0 0]';
 xTarget4=[xHigh 0 yLow 0 0 0 0 0]';
-xTarget = [xTarget1, xTarget2, xTarget3, xTarget4];
 
 x0=[xHigh 0 yHigh 0 0 0 0 0]'; % starting offset
 
@@ -36,48 +33,47 @@ xZero = xHigh;
 yZero = yHigh;
 
 % define constraints for each side
-margin = 0.01;
-scl1 = [xHigh - margin; yLow];
+margin = 0.02;
+scl1 = [xHigh - margin - stickCorr; yLow];
+% scl1 = [xHigh - margin; yLow];
 scl2 = [xLow; yHigh - margin];
-scl3 = [xLow - margin; yLow];
+scl3 = [xLow - margin + stickCorr; yLow];
+% scl3 = [xLow - margin; yLow];
 scl4 = [xLow; yLow - margin];
 
-sch1 = [xHigh + margin; yHigh];
+sch1 = [xHigh + margin - stickCorr; yHigh];
+% sch1 = [xHigh + margin; yHigh];
 sch2 = [xHigh; yHigh + margin];
-sch3 = [xLow + margin; yHigh];
+sch3 = [xLow + margin + stickCorr; yHigh];
+% sch3 = [xLow + margin; yHigh];
 sch4 = [xHigh; yLow + margin];
-% scl1 = [0; 0];
-% scl2 = [0; 0];
-% scl3 = [0; 0];
-% scl4 = [0; 0];
-% 
-% sch1 = [1; 1];
-% sch2 = [1; 1];
-% sch3 = [1; 1];
-% sch4 = [1; 1];
+
+constraints = [scl1, scl2, scl3, scl4, sch1, sch2, sch3, sch4];
 %% Declare penalty matrices and tune them here:
 Q=eye(8); % increasing improves linear performance, non-linear moves in Y but barely in X
               % making it smaller => shit don't move at all
-Q(1,1) = 80;       % increase this hard to make X move
+Q(1,1) = 8;       % increase this hard to make X move
 % Q(2,2) = 1;
-Q(3,3) = 80;
+Q(3,3) = 8;
 % Q(4,4) = 1;
-Q(5,5) = 200;
-Q(6,6) = 50;
-Q(7,7) = 200;
-Q(8,8) = 50;
+Q(5,5) = 20;
+Q(6,6) = 5;
+Q(7,7) = 20;
+Q(8,8) = 5;
 
-R=eye(2); % increase and shit don't move
+R=eye(2)*0.01; % increase and shit don't move
               % decrease non-linear doesn't move
 P=eye(8);     % increase and it barely moves
             % decrease and it's even worse
-P(1,1) = 500;       % increase this hard to make X move
+P(1,1) = 10;       % increase this hard to make X move
 
-P(3,3) = 500;
+P(3,3) = 10;
 
 %% Declare contraints
 % Declaring constraints only on states (X,Y,theta,psi) and inputs u
-angleConstraint=1*pi/180; % in radians
+% create 4 sets of state constraints for 4 sides of the square
+angleConstraint=10*pi/180; % in radians
+
 cl1=[scl1(1); scl1(2); -angleConstraint; -angleConstraint];
 cl2=[scl2(1); scl2(2); -angleConstraint; -angleConstraint];
 cl3=[scl3(1); scl3(2); -angleConstraint; -angleConstraint];
@@ -88,12 +84,9 @@ ch2=[sch2(1); sch2(2);  angleConstraint;  angleConstraint];
 ch3=[sch3(1); sch3(2);  angleConstraint;  angleConstraint];
 ch4=[sch4(1); sch4(2);  angleConstraint;  angleConstraint];
 
-% cl=[0.02; 0.02; -angleConstraint; -angleConstraint];
-% ch=[0.45; 0.55;  angleConstraint;  angleConstraint];
-
-
 ul=[-1; -1];
 uh=[1; 1];
+
 % constrained vector is Dx, hence
 D=zeros(4,8);D(1,1)=1;D(2,3)=1;D(3,5)=1;D(4,7)=1;
 
@@ -103,22 +96,16 @@ D=zeros(4,8);D(1,1)=1;D(2,3)=1;D(3,5)=1;D(4,7)=1;
 [Dt,Et,bt3]=myStageConstraints(A,B,D,cl3,ch3,ul,uh);
 [Dt,Et,bt4]=myStageConstraints(A,B,D,cl4,ch4,ul,uh);
 
-% [Dt,Et,bt]=myStageConstraints(A,B,D,cl,ch,ul,uh);
-
-
 %% Compute trajectory constraints matrices and vector
 [DD,EE,bb1]=myTrajectoryConstraints(Dt,Et,bt1,N);
 [DD,EE,bb2]=myTrajectoryConstraints(Dt,Et,bt2,N);
 [DD,EE,bb3]=myTrajectoryConstraints(Dt,Et,bt3,N);
 [DD,EE,bb4]=myTrajectoryConstraints(Dt,Et,bt4,N);
 
-% [DD,EE,bb]=myTrajectoryConstraints(Dt,Et,bt,N);
-
 %% Compute QP constraint matrices
 [Gamma,Phi] = genPrediction(A,B,N); % get prediction matrices:
 
 [F,J,L]=myConstraintMatrices(DD,EE,Gamma,Phi,N);
-
 
 %% Compute QP cost matrices
 [H,G] = genCostMatrices(Gamma,Phi,Q,R,P,N);
@@ -128,24 +115,19 @@ D=zeros(4,8);D(1,1)=1;D(2,3)=1;D(3,5)=1;D(4,7)=1;
 [H,p] = chol(H,'lower');
 H=(H'\eye(size(H)))';
 
-%% create arrays of combined constraint matrices for 4 corners
-bb = [bb1, bb2, bb3, bb4];
+%% create arrays of combined constraint and target matrices for 4 corners
+bb = bb1;       % bb must be vector, otherwise non-lin sim crashes
+bb_all = [bb1, bb2, bb3, bb4];
+xTarget_all = {xTarget1, xTarget2, xTarget3, xTarget4};
 
 %% Running a matlab simulation and visualising the results:
 MatlabSimulation
 GantryResponsePlot(t,allU,...
-    x,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],[1 3],xTarget,'Linear simulation: MPC performance');
+    x,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],[1 3],xTarget1,'Linear simulation: MPC performance');
 
 %% plot trace of the load to check square tracking
 stringLength = 1;
-figure;
-scatter(x(:,1)+stringLength*sin(x(:,5)),x(:,3)+stringLength*sin(x(:,7)))
-hold on
-scatter(x(:,1),x(:,3),'g');
-scatter(xLow,yLow, 'r');
-scatter(xLow,yHigh, 'r');
-scatter(xHigh,yHigh, 'r');
-scatter(xHigh,yLow, 'r');
+craneMovementPlot(x(:,1),x(:,3),x(:,5),x(:,7),xLow,xHigh,yLow,yHigh,constraints,stringLength,'Linear simulation');
 %% Run the Simulink simulation for your controller
 % Note that in order to test your controller you have to navigate to
 % SimscapeCrane_MPChard/MPC and copy paste your controller code inside the
@@ -158,12 +140,8 @@ responseRHC.input=GantryCraneInput;
 %% visualise the performance:
 GantryResponsePlot(responseRHC.output.time,responseRHC.input.signals.values,...
     responseRHC.output.signals.values,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],...
-    [1 3],xTarget,'Nonlinear simulation: MPC performance');
+    [1 3],xTarget1,'Nonlinear simulation: MPC performance');
 %% plot trace of the load to check square tracking
-figure;
-scatter(responseRHC.output.signals.values(:,1),responseRHC.output.signals.values(:,3))
-hold on
-scatter(xLow,yLow, 'r');
-scatter(xLow,yHigh, 'r');
-scatter(xHigh,yHigh, 'r');
-scatter(xHigh,yLow, 'r');
+craneMovementPlot(responseRHC.output.signals.values(:,1),...
+    responseRHC.output.signals.values(:,3),responseRHC.output.signals.values(:,5),...
+    responseRHC.output.signals.values(:,7),xLow,xHigh,yLow,yHigh,constraints,stringLength,'Non-linear simulation');
