@@ -4,9 +4,9 @@ close all
 load('Params_Simscape.mat');
 load('SSmodelParams.mat');
 %% Declare simulation parameters
-Ts=1/25;
+Ts=1/30;    % sampling time
 N=20;  %short horizon makes slow response
-T=20;
+T=50;
 % constant to correct for "stickiness" of the crane in X axis
 stickCorr = 0.01;
 
@@ -79,14 +79,74 @@ sim('SimscapeCrane_RHC');
 responseRHC.output=GantryCraneOutput;
 responseRHC.input=GantryCraneInput;
 
-%% plot trace of the load to check square tracking
-stringLength = 0.5;
-craneMovementPlot(responseRHC.output.signals.values(:,1),responseRHC.output.signals.values(:,3),...
-    responseRHC.output.signals.values(:,5),responseRHC.output.signals.values(:,7),...
-    xLow,xHigh,yLow,yHigh,zeros(2,8),stringLength,'Non-constrained simulation');
 %% visualise the performance:
 help GantryResponsePlot
 % GantryResponsePlot(responsePP.output.time,responsePP.input.signals.values,...
 %     responsePP.output.signals.values,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],[1 3],xTarget,'PID performance');
 GantryResponsePlot(responseRHC.output.time,responseRHC.input.signals.values,...
     responseRHC.output.signals.values,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],[1 3],xTarget1,'RHC performance');
+
+%% plot trace of the load to check square tracking
+stringLength = 0.5;
+craneMovementPlot(responseRHC.output.signals.values(:,1),responseRHC.output.signals.values(:,3),...
+    responseRHC.output.signals.values(:,5),responseRHC.output.signals.values(:,7),...
+    xLow,xHigh,yLow,yHigh,zeros(2,8),stringLength,'Non-constrained simulation');
+
+%% calculate squarness of the square tracked
+% WARNING this calculation is a function of the string length. As the
+% lenght is estimated, the calculation is not not numerically accurate,
+% however, in comparison between squares it is informative.
+
+% get the traces of the pendulum
+x_pend = responseRHC.output.signals.values(:,1) + stringLength* sin(responseRHC.output.signals.values(:,5));
+y_pend = responseRHC.output.signals.values(:,3) + stringLength* sin(responseRHC.output.signals.values(:,7));
+
+% get the coordinates of the largest circumscribed square
+x_min = min(x_pend);
+x_max = max(x_pend);
+y_min = min(y_pend);
+y_max = max(y_pend);
+hline(y_min,'c');
+hline(y_max,'c');
+vline(x_min,'c');
+vline(x_max,'c');
+
+% get coordinates of largest inscribed square
+% find x-coordinates of trace left and right side
+side_log1 = y_pend > 1.15*yLow;
+side_log2 = y_pend < 0.95*yHigh;
+x_side = x_pend(side_log1 & side_log2);
+% separate to left and right side
+side_log1 = x_side < 0.3;
+side_log2 = x_side > 0.3;
+x_left = x_side(side_log1);
+x_right = x_side(side_log2);
+% get x-coordinates of inscribed square
+x_ins_min = max(x_left);
+x_ins_max = min(x_right);
+
+vline(x_ins_max,'c');
+vline(x_ins_min,'c');
+
+% find y-coordinates of trace top and bottom side
+side_log1 = x_pend > 1.15*xLow;
+side_log2 = x_pend < 0.95*xHigh;
+y_side = y_pend(side_log1 & side_log2);
+% separate to left and right side
+side_log1 = y_side < 0.3;
+side_log2 = y_side > 0.3;
+y_bot = y_side(side_log1);
+y_top = y_side(side_log2);
+% get y-coordinates of inscribed square
+y_ins_min = max(y_bot);
+y_ins_max = min(y_top);
+
+hline(y_ins_max,'c');
+hline(y_ins_min,'c');
+
+% calculate space the trace needs
+% the smaller this number, the better square is tracked
+a_cir = (x_max - x_min)*(y_max - y_min);
+a_ins = (x_ins_max - x_ins_min) * (y_ins_max - y_ins_min);
+
+squarness = a_cir - a_ins

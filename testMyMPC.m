@@ -1,11 +1,11 @@
 clear variables
-close all
+% close all
 clc
 %% SimscapeCrane_MPC_start;
 load('Params_Simscape.mat');
 load('SSmodelParams.mat');
 %% Load the dynamics matrices using a solution from last assignment
-Ts=1/40;    % sampling time
+Ts=1/30;    % sampling time
 [A,B,C,~] = genCraneODE(m,M,MR,r,g,Tx,Ty,Vm,Ts);
 
 %% Define other parameters
