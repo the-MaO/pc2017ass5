@@ -34,5 +34,7 @@ vline(con(1,7));
 % plot elements
 legend({'pendulum','cart'});
 title(figTitle);
+xlabel('X coordinate');
+ylabel('Y coordinate');
 
 end

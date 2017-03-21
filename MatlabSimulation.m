@@ -23,11 +23,11 @@ for t=0:Ts:T
     tic;
     [u,status,iA] = myMPController(H,G,F,currBb,J,L,x(:,end),xCurrTarget,size(B,2),iA);
     optTime=toc; 
-    if status<0
-        close(hw);
-        warning('QP solver failed to find a solution!');
-        break
-    end
+%     if status<0
+%         close(hw);
+%         warning('QP solver failed to find a solution!');
+%         break
+%     end
     % Simulate
     [yy,tt,xx] =lsim(sysd,[u';0 0],[0 Ts],x(:,end));
     % Store variables

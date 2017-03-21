@@ -13,7 +13,7 @@ N=20;       % horizon length
 T=50;       % simulation time
 
 % constant to correct for "stickiness" of the crane in X axis
-stickCorr = 0.01;
+stickCorr = 0;
 
 % define sides of the square
 xHigh = 0.45 + stickCorr;
@@ -137,9 +137,9 @@ sim('SimscapeCrane_MPChard');
 responseRHC.output=GantryCraneOutput;
 responseRHC.input=GantryCraneInput;
 %% visualise the performance:
-GantryResponsePlot(responseRHC.output.time,responseRHC.input.signals.values,...
-    responseRHC.output.signals.values,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],...
-    [1 3],xTarget1,'Nonlinear simulation: MPC performance');
+% GantryResponsePlot(responseRHC.output.time,responseRHC.input.signals.values,...
+%     responseRHC.output.signals.values,[-1 -1],[1 1],[0 0],[xRange(2) yRange(2)],...
+%     [1 3],xTarget1,'Nonlinear simulation: MPC performance');
 %% plot trace of the load to check square tracking
 craneMovementPlot(responseRHC.output.signals.values(:,1),...
     responseRHC.output.signals.values(:,3),responseRHC.output.signals.values(:,5),...
